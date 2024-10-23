@@ -1,0 +1,6 @@
+@COMPUESTOS_API_CS_SQL_HostAddress = http://localhost:5212
+
+GET {{COMPUESTOS_API_CS_SQL_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
