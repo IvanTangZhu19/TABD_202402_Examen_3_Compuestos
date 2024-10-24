@@ -1,4 +1,5 @@
 ﻿using COMPUESTOS_API_CS_SQL.Exceptions;
+using COMPUESTOS_API_CS_SQL.Models;
 using COMPUESTOS_API_CS_SQL.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -35,25 +36,25 @@ namespace COMPUESTOS_API_CS_SQL.Controllers
             }
         }
 
-        //[HttpPost]
-        //public async Task<IActionResult> CreateAsync(Pais unPais)
-        //{
-        //    try
-        //    {
-        //        var paisCreado = await _paisService
-        //            .CreateAsync(unPais);
+        [HttpPost]
+        public async Task<IActionResult> CreateAsync(Elemento unElemento)
+        {
+            try
+            {
+                var elementoCreado = await _elementoService
+                    .CreateAsync(unElemento);
 
-        //        return Ok(paisCreado);
-        //    }
-        //    catch (AppValidationException error)
-        //    {
-        //        return BadRequest($"Error en la validación: {error.Message}");
-        //    }
-        //    catch (DbOperationException error)
-        //    {
-        //        return BadRequest($"Error en la operación de la DB {error.Message}");
-        //    }
-        //}
+                return Ok(elementoCreado);
+            }
+            catch (AppValidationException error)
+            {
+                return BadRequest($"Error en la validación: {error.Message}");
+            }
+            catch (DbOperationException error)
+            {
+                return BadRequest($"Error en la operación de la DB {error.Message}");
+            }
+        }
         //[HttpPut]
         //public async Task<IActionResult> UpdateAsync(Pais unPais)
         //{

@@ -59,4 +59,66 @@ create table core.elementos_compuesto
     constraint elementosCompuesto_pk primary key (compuestoID, elementoID)
 );
 
+ALTER TABLE nombre_tabla
+ADD CONSTRAINT nombre_unico UNIQUE (nombre_columna);
 
+alter table core.elementos add constraint elemento_nombre_uk unique (nombre);
+alter table core.elementos add constraint elemento_simbolo_uk unique (simbolo);
+alter table core.elementos add constraint elemento_numero_uk unique (numero_atomico);
+
+---------------------
+-- Procedimientos
+----------------------
+
+ create or replace procedure core.p_insertar_elemento(
+                            in p_nombre                 text,
+                            in p_simbolo             	text,  
+			    			in p_numero_atomico			integer,
+			    			in p_configuracion			text)
+    language plpgsql as
+$$
+    declare
+        l_total_registros integer;
+
+    begin
+        if p_nombre is null or p_simbolo is null or 
+	       p_numero_atomico is null or p_configuracion is null or
+           length(p_nombre) = 0 or
+           length(p_simbolo) = 0 or
+ 	   p_numero_atomico <= 0 or
+           length(p_configuracion) = 0 then
+               raise exception 'Cualquiera de los valores no pueden ser nulos';
+        end if;
+
+        -- Validación de cantidad de registros con ese nombre
+        select count(id) into l_total_registros
+        from core.elementos
+        where lower(nombre) = lower(p_nombre);
+
+        if l_total_registros > 0  then
+            raise exception 'Ya existe un elemento con ese nombre registrado';
+        end if;
+
+        -- Validación de cantidad de registros con ese simbolo
+        select count(id) into l_total_registros
+        from core.elementos
+        where lower(simbolo) = lower(p_simbolo);
+
+        if l_total_registros > 0  then
+            raise exception 'Ya existe un elemento con ese simbolo registrado';
+        end if;
+
+	-- Validación de cantidad de registros con ese numero atomico
+        select count(id) into l_total_registros
+        from core.elementos
+        where lower(numero_atomico) = lower(p_numero_atomico);
+
+        if l_total_registros > 0  then
+            raise exception 'Ya existe un elemento con ese numero atomico registrado';
+        end if;
+
+
+        insert into core.elementos(nombre, simbolo, numero_atomico, configuracion)
+        values (initcap(p_nombre), initcap(p_simbolo), p_numero_atomico, p_configuracion);
+    end;
+$$;

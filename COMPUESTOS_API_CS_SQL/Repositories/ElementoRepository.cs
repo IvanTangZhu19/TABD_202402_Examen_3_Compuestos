@@ -1,7 +1,9 @@
 ﻿using COMPUESTOS_API_CS_SQL.Contexts;
+using COMPUESTOS_API_CS_SQL.Exceptions;
 using COMPUESTOS_API_CS_SQL.Interfaces;
 using COMPUESTOS_API_CS_SQL.Models;
 using Dapper;
+using Npgsql;
 using System.Data;
 
 namespace COMPUESTOS_API_CS_SQL.Repositories
@@ -23,7 +25,6 @@ namespace COMPUESTOS_API_CS_SQL.Repositories
 
             return resultadoElementos.ToList();
         }
-
 
         public async Task<Elemento> GetByGuidAsync(Guid elemento_guid)
         {
@@ -49,9 +50,39 @@ namespace COMPUESTOS_API_CS_SQL.Repositories
 
             return unElemento;
         }
-        public Task<bool> CreateAsync(Elemento unElemento)
+        public async Task<bool> CreateAsync(Elemento unElemento)
         {
-            throw new NotImplementedException();
+            bool resultadoAccion = false;
+
+            try
+            {
+                var conexion = contextoDB.CreateConnection();
+
+                string procedimiento = "core.p_insertar_elemento";
+
+                var parametros = new
+                {
+                    p_nombre = unElemento.Nombre,
+                    p_simbolo = unElemento.Simbolo,
+                    p_numero_atomico = unElemento.Numero_atomico,
+                    p_configuracion = unElemento.Configuracion
+                };
+
+                var cantidadFilas = await conexion
+                    .ExecuteAsync(
+                        procedimiento,
+                        parametros,
+                        commandType: CommandType.StoredProcedure);
+
+                if (cantidadFilas != 0)
+                    resultadoAccion = true;
+            }
+            catch (NpgsqlException error)
+            {
+                throw new DbOperationException(error.Message);
+            }
+
+            return resultadoAccion;
         }
 
         public Task<bool> DeleteAsync(Guid elemento_guid)
@@ -63,5 +94,60 @@ namespace COMPUESTOS_API_CS_SQL.Repositories
         {
             throw new NotImplementedException();
         }
+
+        public async Task<bool> checkUniqueValuesAsync(Elemento unElemento)
+        {
+            var conexion = contextoDB.CreateConnection();
+            int count = 0;
+
+            DynamicParameters parametrosSentencia = new();
+            parametrosSentencia.Add("@nombre", unElemento.Nombre,
+                                    DbType.String, ParameterDirection.Input);
+            parametrosSentencia.Add("@simbolo", unElemento.Simbolo,
+                                    DbType.String, ParameterDirection.Input);
+            parametrosSentencia.Add("@numero_atomico", unElemento.Numero_atomico,
+                                    DbType.Int32, ParameterDirection.Input);
+
+            string sentenciaSQL =
+                "SELECT id " +
+                "FROM core.elementos " +
+                "WHERE nombre = @nombre OR simbolo = @simbolo OR numero_atomico = @numero_atomico";
+
+
+            var resultado = await conexion.QueryAsync<Elemento>(sentenciaSQL,
+                parametrosSentencia);
+
+            count = resultado.Count();
+
+            if (count > 0) return true;
+            else return false;
+
+        }
+
+        public async Task<Elemento> GetByNameAsync(string nombre)
+        {
+            Elemento unElemento = new();
+
+            var conexion = contextoDB.CreateConnection();
+
+            DynamicParameters parametrosSentencia = new();
+            parametrosSentencia.Add("@nombre", nombre,
+                                    DbType.Guid, ParameterDirection.Input);
+
+            string sentenciaSQL =
+                "SELECT elemento_uuid uuid, nombre, simbolo, numero_atomico, configuracion  " +
+                "FROM core.elementos " +
+                "WHERE elemento_uuid = @nombre ";
+
+
+            var resultado = await conexion.QueryAsync<Elemento>(sentenciaSQL,
+                parametrosSentencia);
+
+            if (resultado.Any())
+                unElemento = resultado.First();
+
+            return unElemento;
+        }
+
     }
 }

@@ -23,5 +23,57 @@ namespace COMPUESTOS_API_CS_SQL.Services
 
             return unElemento;
         }
+        public async Task<Elemento> CreateAsync(Elemento unElemento)
+        {
+            string resultadoValidacionDatos = ValidaDatos(unElemento);
+            Elemento elementoExistente;
+
+            if (!string.IsNullOrEmpty(resultadoValidacionDatos))
+                throw new AppValidationException(resultadoValidacionDatos);
+
+
+            bool verificacionUnique = await _elementoRepository
+                .checkUniqueValuesAsync(unElemento);
+
+            // True es hay valores para los campos: nombre, simbolo y numero atomico
+            if (verificacionUnique)
+                throw new AppValidationException("Uno o varios campos ya existen en la base de datos");
+
+            try
+            {
+                bool resultado = await _elementoRepository
+                    .CreateAsync(unElemento);
+
+                if (!resultado)
+                    throw new AppValidationException("Operación ejecutada pero no generó cambios");
+
+                elementoExistente = await _elementoRepository
+                    .GetByNameAsync(unElemento.Nombre);
+            }
+            catch (DbOperationException)
+            {
+                throw;
+            }
+            return elementoExistente;
+        }
+
+        private static string ValidaDatos(Elemento unElemento)
+        {
+            if (string.IsNullOrEmpty(unElemento.Nombre))
+                return ("El nombre del elemento no puede estar vacío");
+
+            if (string.IsNullOrEmpty(unElemento.Simbolo))
+                return ("El simbolo no puede estar vacío");
+
+            if(unElemento.Numero_atomico <= 0 || unElemento.Numero_atomico is null)
+                return ("El Numero atómico no puede ser menor o igual a cero o estar vacío");
+
+            if (string.IsNullOrEmpty(unElemento.Configuracion))
+                return ("La configuracion electronica no puede estar vacío");
+
+
+
+            return string.Empty;
+        }
     }
 }

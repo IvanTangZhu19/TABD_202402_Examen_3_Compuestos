@@ -14,7 +14,7 @@ namespace COMPUESTOS_API_CS_SQL.Models
         public string? Simbolo { get; set; } = string.Empty;
 
         [JsonPropertyName("numero_atomico")]
-        public string? Numero_atomico { get; set; } = string.Empty;
+        public int? Numero_atomico { get; set; } = 0;
 
         [JsonPropertyName("configuracion")]
         public string? Configuracion { get; set; } = string.Empty;
