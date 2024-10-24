@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using Npgsql;
+using System.Data;
 
 namespace COMPUESTOS_API_CS_SQL.Contexts
 {
