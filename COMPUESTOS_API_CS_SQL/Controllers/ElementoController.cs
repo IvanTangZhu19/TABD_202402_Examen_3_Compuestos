@@ -1,4 +1,5 @@
-﻿using COMPUESTOS_API_CS_SQL.Services;
+﻿using COMPUESTOS_API_CS_SQL.Exceptions;
+using COMPUESTOS_API_CS_SQL.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace COMPUESTOS_API_CS_SQL.Controllers
@@ -12,10 +13,85 @@ namespace COMPUESTOS_API_CS_SQL.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAllAsync()
         {
-            var losPaises = await _elementoService
+            var losElementos = await _elementoService
                 .GetAllAsync();
 
-            return Ok(losPaises);
+            return Ok(losElementos);
         }
+
+        [HttpGet("{elemento_guid:Guid}")]
+        public async Task<IActionResult> GetByGuidAsync(Guid elemento_guid)
+        {
+            try
+            {
+                var unElemento = await _elementoService
+                    .GetByGuidAsync(elemento_guid);
+
+                return Ok(unElemento);
+            }
+            catch (AppValidationException error)
+            {
+                return NotFound(error.Message);
+            }
+        }
+
+        //[HttpPost]
+        //public async Task<IActionResult> CreateAsync(Pais unPais)
+        //{
+        //    try
+        //    {
+        //        var paisCreado = await _paisService
+        //            .CreateAsync(unPais);
+
+        //        return Ok(paisCreado);
+        //    }
+        //    catch (AppValidationException error)
+        //    {
+        //        return BadRequest($"Error en la validación: {error.Message}");
+        //    }
+        //    catch (DbOperationException error)
+        //    {
+        //        return BadRequest($"Error en la operación de la DB {error.Message}");
+        //    }
+        //}
+        //[HttpPut]
+        //public async Task<IActionResult> UpdateAsync(Pais unPais)
+        //{
+        //    try
+        //    {
+        //        var paisActualizado = await _paisService
+        //            .UpdateAsync(unPais);
+
+        //        return Ok(unPais);
+        //    }
+        //    catch (AppValidationException error)
+        //    {
+        //        return BadRequest($"Error de validación: {error.Message}");
+        //    }
+        //    catch (DbOperationException error)
+        //    {
+        //        return BadRequest($"Error de operacion en DB: {error.Message}");
+        //    }
+        //}
+
+        //[HttpDelete]
+        //public async Task<IActionResult> RemoveAsync(Guid pais_guid)
+        //{
+        //    try
+        //    {
+        //        var paisEliminado = await _paisService
+        //            .RemoveAsync(pais_guid);
+
+        //        return Ok(paisEliminado);
+        //    }
+        //    catch (AppValidationException error)
+        //    {
+        //        return BadRequest($"Error de validación: {error.Message}");
+        //    }
+        //    catch (DbOperationException error)
+        //    {
+        //        return BadRequest($"Error de operacion en DB: {error.Message}");
+        //    }
+        //}
     }
 }

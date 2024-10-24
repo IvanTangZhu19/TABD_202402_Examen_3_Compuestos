@@ -2,6 +2,7 @@
 using COMPUESTOS_API_CS_SQL.Interfaces;
 using COMPUESTOS_API_CS_SQL.Models;
 using Dapper;
+using System.Data;
 
 namespace COMPUESTOS_API_CS_SQL.Repositories
 {
@@ -24,9 +25,29 @@ namespace COMPUESTOS_API_CS_SQL.Repositories
         }
 
 
-        public Task<Elemento> GetByGuidAsync(Guid elemento_guid)
+        public async Task<Elemento> GetByGuidAsync(Guid elemento_guid)
         {
-            throw new NotImplementedException();
+            Elemento unElemento = new();
+
+            var conexion = contextoDB.CreateConnection();
+
+            DynamicParameters parametrosSentencia = new();
+            parametrosSentencia.Add("@elemento_guid", elemento_guid,
+                                    DbType.Guid, ParameterDirection.Input);
+
+            string sentenciaSQL =
+                "SELECT elemento_uuid uuid, nombre, simbolo, numero_atomico, configuracion  " +
+                "FROM core.elementos " +
+                "WHERE elemento_uuid = @elemento_guid ";
+
+
+            var resultado = await conexion.QueryAsync<Elemento>(sentenciaSQL,
+                parametrosSentencia);
+
+            if (resultado.Any())
+                unElemento = resultado.First();
+
+            return unElemento;
         }
         public Task<bool> CreateAsync(Elemento unElemento)
         {
