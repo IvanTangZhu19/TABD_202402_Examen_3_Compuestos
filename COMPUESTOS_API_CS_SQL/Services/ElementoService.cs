@@ -32,11 +32,11 @@ namespace COMPUESTOS_API_CS_SQL.Services
                 throw new AppValidationException(resultadoValidacionDatos);
 
 
-            bool verificacionUnique = await _elementoRepository
+            var verificacionUnique = await _elementoRepository
                 .checkUniqueValuesAsync(unElemento);
 
             // True es hay valores para los campos: nombre, simbolo y numero atomico
-            if (verificacionUnique)
+            if (verificacionUnique.Uuid != Guid.Empty)
                 throw new AppValidationException("Uno o varios campos ya existen en la base de datos");
 
             try
@@ -48,12 +48,44 @@ namespace COMPUESTOS_API_CS_SQL.Services
                     throw new AppValidationException("Operación ejecutada pero no generó cambios");
 
                 elementoExistente = await _elementoRepository
-                    .GetByNameAsync(unElemento.Nombre);
+                    .GetByNameAsync(unElemento.Nombre!);
             }
             catch (DbOperationException)
             {
                 throw;
             }
+            return elementoExistente;
+        }
+
+        public async Task<Elemento> UpdateAsync(Elemento unElemento)
+        {
+            string resultadoValidacionDatos = ValidaDatos(unElemento);
+
+            if (!string.IsNullOrEmpty(resultadoValidacionDatos))
+                throw new AppValidationException(resultadoValidacionDatos);
+
+            var elementoExistente = await _elementoRepository
+                .checkUniqueValuesAsync(unElemento);
+
+            if (elementoExistente.Uuid != Guid.Empty && elementoExistente.Uuid != unElemento.Uuid)
+                throw new AppValidationException($"Ya existe el elemento {unElemento.Nombre}");
+
+            try
+            {
+                bool resultadoAccion = await _elementoRepository
+                    .UpdateAsync(unElemento);
+
+                if (!resultadoAccion)
+                    throw new AppValidationException("Operación ejecutada pero no generó cambios en la DB");
+
+                elementoExistente = await _elementoRepository
+                    .GetByGuidAsync(unElemento.Uuid);
+            }
+            catch (DbOperationException)
+            {
+                throw;
+            }
+
             return elementoExistente;
         }
 
@@ -70,8 +102,6 @@ namespace COMPUESTOS_API_CS_SQL.Services
 
             if (string.IsNullOrEmpty(unElemento.Configuracion))
                 return ("La configuracion electronica no puede estar vacío");
-
-
 
             return string.Empty;
         }

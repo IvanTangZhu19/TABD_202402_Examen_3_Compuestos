@@ -111,7 +111,7 @@ $$
 	-- Validación de cantidad de registros con ese numero atomico
         select count(id) into l_total_registros
         from core.elementos
-        where lower(numero_atomico) = lower(p_numero_atomico);
+        where numero_atomico = p_numero_atomico;
 
         if l_total_registros > 0  then
             raise exception 'Ya existe un elemento con ese numero atomico registrado';
@@ -120,5 +120,43 @@ $$
 
         insert into core.elementos(nombre, simbolo, numero_atomico, configuracion)
         values (initcap(p_nombre), initcap(p_simbolo), p_numero_atomico, p_configuracion);
+    end;
+$$;
+
+
+-- Actualizar 
+create or replace procedure core.p_actualizar_elemento(
+                            in p_uuid           uuid,
+                            in p_nombre         text,
+                            in p_simbolo        text,
+			    in p_numero_atomico text,
+			    in p_configuracion  text)
+    language plpgsql as
+$$
+    declare
+        l_total_registros integer;
+
+    begin
+        select count(id) into l_total_registros
+        from core.elementos
+        where pais_uuid = p_uuid;
+
+        if l_total_registros = 0  then
+            raise exception 'No existe un elemento registrado con ese Guid';
+        end if;
+
+        if p_nombre is null or
+           p_simbolo is null or
+	       p_configuracion is null or
+           p_numero_atomico <= 0 or
+           length(p_nombre) = 0 or
+	       length(p_simbolo) = 0 or
+           length(p_configuracion) = 0 then
+               raise exception 'El nombre del elemento o el simbolo o la configuración no pueden ser nulos';
+        end if;
+
+        update core.elemento
+        set nombre = initcap(p_nombre), simbolo = initcap(p_simbolo), numero_atomico = p_numero_atomico, configuracion = p_configuracion 
+        where elemento_uuid = p_uuid;
     end;
 $$;

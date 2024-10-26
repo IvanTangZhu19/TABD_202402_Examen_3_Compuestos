@@ -90,15 +90,50 @@ namespace COMPUESTOS_API_CS_SQL.Repositories
             throw new NotImplementedException();
         }
 
-        public Task<bool> UpdateAsync(Elemento unElemento)
+        public async Task<bool> UpdateAsync(Elemento unElemento)
         {
-            throw new NotImplementedException();
+            bool resultadoAccion = false;
+
+            var elementoExistente = await GetByGuidAsync(unElemento.Uuid);
+
+            if (elementoExistente.Uuid == Guid.Empty)
+                throw new DbOperationException($"No se puede actualizar. No existe el elemento {unElemento.Nombre!}.");
+
+            try
+            {
+                var conexion = contextoDB.CreateConnection();
+
+                string procedimiento = "core.p_actualizar_elemento";
+                var parametros = new
+                {
+                    p_uuid = unElemento.Uuid,
+                    p_nombre = unElemento.Nombre,
+                    p_simbolo = unElemento.Simbolo,
+                    p_numero_atomico = unElemento.Numero_atomico,
+                    p_configuracion = unElemento.Configuracion
+                };
+
+                var cantidad_filas = await conexion.ExecuteAsync(
+                    procedimiento,
+                    parametros,
+                    commandType: CommandType.StoredProcedure);
+
+                if (cantidad_filas != 0)
+                    resultadoAccion = true;
+            }
+            catch (NpgsqlException error)
+            {
+                throw new DbOperationException(error.Message);
+            }
+
+            return resultadoAccion;
         }
 
-        public async Task<bool> checkUniqueValuesAsync(Elemento unElemento)
+        public async Task<Elemento> checkUniqueValuesAsync(Elemento unElemento)
         {
             var conexion = contextoDB.CreateConnection();
             int count = 0;
+            Elemento elemento = new();
 
             DynamicParameters parametrosSentencia = new();
             parametrosSentencia.Add("@nombre", unElemento.Nombre,
@@ -117,10 +152,13 @@ namespace COMPUESTOS_API_CS_SQL.Repositories
             var resultado = await conexion.QueryAsync<Elemento>(sentenciaSQL,
                 parametrosSentencia);
 
-            count = resultado.Count();
+            if(resultado.Any()) elemento = resultado.First();
+            //count = resultado.Count();
 
-            if (count > 0) return true;
-            else return false;
+            //if (count > 0) return true;
+            //else return false;
+
+            return elemento;
 
         }
 
@@ -132,12 +170,12 @@ namespace COMPUESTOS_API_CS_SQL.Repositories
 
             DynamicParameters parametrosSentencia = new();
             parametrosSentencia.Add("@nombre", nombre,
-                                    DbType.Guid, ParameterDirection.Input);
+                                    DbType.String, ParameterDirection.Input);
 
             string sentenciaSQL =
                 "SELECT elemento_uuid uuid, nombre, simbolo, numero_atomico, configuracion  " +
                 "FROM core.elementos " +
-                "WHERE elemento_uuid = @nombre ";
+                "WHERE nombre = @nombre ";
 
 
             var resultado = await conexion.QueryAsync<Elemento>(sentenciaSQL,

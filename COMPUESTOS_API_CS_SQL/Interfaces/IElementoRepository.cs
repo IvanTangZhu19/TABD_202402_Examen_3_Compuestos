@@ -10,7 +10,7 @@ namespace COMPUESTOS_API_CS_SQL.Interfaces
         public Task<bool> UpdateAsync(Elemento unElemento);
         public Task<bool> DeleteAsync(Guid elemento_guid);
 
-        public Task<bool> checkUniqueValuesAsync(Elemento unElemento);
+        public Task<Elemento> checkUniqueValuesAsync(Elemento unElemento);
 
         public Task<Elemento> GetByNameAsync(string nombre);
     }

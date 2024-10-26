@@ -55,25 +55,25 @@ namespace COMPUESTOS_API_CS_SQL.Controllers
                 return BadRequest($"Error en la operación de la DB {error.Message}");
             }
         }
-        //[HttpPut]
-        //public async Task<IActionResult> UpdateAsync(Pais unPais)
-        //{
-        //    try
-        //    {
-        //        var paisActualizado = await _paisService
-        //            .UpdateAsync(unPais);
+        [HttpPut]
+        public async Task<IActionResult> UpdateAsync(Elemento unElemento)
+        {
+            try
+            {
+                var paisActualizado = await _elementoService
+                    .UpdateAsync(unElemento);
 
-        //        return Ok(unPais);
-        //    }
-        //    catch (AppValidationException error)
-        //    {
-        //        return BadRequest($"Error de validación: {error.Message}");
-        //    }
-        //    catch (DbOperationException error)
-        //    {
-        //        return BadRequest($"Error de operacion en DB: {error.Message}");
-        //    }
-        //}
+                return Ok(unElemento);
+            }
+            catch (AppValidationException error)
+            {
+                return BadRequest($"Error de validación: {error.Message}");
+            }
+            catch (DbOperationException error)
+            {
+                return BadRequest($"Error de operacion en DB: {error.Message}");
+            }
+        }
 
         //[HttpDelete]
         //public async Task<IActionResult> RemoveAsync(Guid pais_guid)
