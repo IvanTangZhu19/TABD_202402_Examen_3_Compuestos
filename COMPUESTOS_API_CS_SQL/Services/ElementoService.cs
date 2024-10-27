@@ -89,6 +89,37 @@ namespace COMPUESTOS_API_CS_SQL.Services
             return elementoExistente;
         }
 
+        public async Task<Elemento> RemoveAsync(Guid elemento_guid)
+        {
+            var paisExistente = await _elementoRepository
+                .GetByGuidAsync(elemento_guid);
+
+            if (paisExistente.Uuid == Guid.Empty)
+                throw new AppValidationException($"No existe un elemento identificado con el Guid {elemento_guid} registrado previamente");
+
+            int totalRazasAsociadas = await _elementoRepository
+                .GetTotalAssociatedCompoundsByElementGuidAsync(elemento_guid);
+
+            if (totalRazasAsociadas != 0)
+                throw new AppValidationException($"Pais {paisExistente.Nombre} tiene asociado {totalRazasAsociadas} razas. No se puede eliminar.");
+
+            try
+            {
+                bool resultadoAccion = await _elementoRepository
+                    .DeleteAsync(elemento_guid);
+
+                if (!resultadoAccion)
+                    throw new AppValidationException("Operación ejecutada pero no generó cambios en la DB");
+            }
+            catch (DbOperationException)
+            {
+                throw;
+            }
+
+            return paisExistente;
+
+        }
+
         private static string ValidaDatos(Elemento unElemento)
         {
             if (string.IsNullOrEmpty(unElemento.Nombre))

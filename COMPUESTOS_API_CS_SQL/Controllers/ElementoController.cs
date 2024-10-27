@@ -75,24 +75,24 @@ namespace COMPUESTOS_API_CS_SQL.Controllers
             }
         }
 
-        //[HttpDelete]
-        //public async Task<IActionResult> RemoveAsync(Guid pais_guid)
-        //{
-        //    try
-        //    {
-        //        var paisEliminado = await _paisService
-        //            .RemoveAsync(pais_guid);
+        [HttpDelete]
+        public async Task<IActionResult> RemoveAsync(Guid elemento_guid)
+        {
+            try
+            {
+                var elementoEliminado = await _elementoService
+                    .RemoveAsync(elemento_guid);
 
-        //        return Ok(paisEliminado);
-        //    }
-        //    catch (AppValidationException error)
-        //    {
-        //        return BadRequest($"Error de validación: {error.Message}");
-        //    }
-        //    catch (DbOperationException error)
-        //    {
-        //        return BadRequest($"Error de operacion en DB: {error.Message}");
-        //    }
-        //}
+                return Ok(elementoEliminado);
+            }
+            catch (AppValidationException error)
+            {
+                return BadRequest($"Error de validación: {error.Message}");
+            }
+            catch (DbOperationException error)
+            {
+                return BadRequest($"Error de operacion en DB: {error.Message}");
+            }
+        }
     }
 }

@@ -85,10 +85,6 @@ namespace COMPUESTOS_API_CS_SQL.Repositories
             return resultadoAccion;
         }
 
-        public Task<bool> DeleteAsync(Guid elemento_guid)
-        {
-            throw new NotImplementedException();
-        }
 
         public async Task<bool> UpdateAsync(Elemento unElemento)
         {
@@ -129,10 +125,58 @@ namespace COMPUESTOS_API_CS_SQL.Repositories
             return resultadoAccion;
         }
 
+        public async Task<bool> DeleteAsync(Guid elemento_guid)
+        {
+            bool resultadoAccion = false;
+
+            try
+            {
+                var conexion = contextoDB.CreateConnection();
+
+                string procedimiento = "core.p_eliminar_elemento";
+                var parametros = new
+                {
+                    p_uuid = elemento_guid
+                };
+
+                var cantidad_filas = await conexion.ExecuteAsync(
+                    procedimiento,
+                    parametros,
+                    commandType: CommandType.StoredProcedure);
+
+                if (cantidad_filas != 0)
+                    resultadoAccion = true;
+            }
+            catch (NpgsqlException error)
+            {
+                throw new DbOperationException(error.Message);
+            }
+
+            return resultadoAccion;
+        }
+
+        public async Task<int> GetTotalAssociatedCompoundsByElementGuidAsync(Guid elemento_guid)
+        {
+            var conexion = contextoDB.CreateConnection();
+
+            DynamicParameters parametrosSentencia = new();
+            parametrosSentencia.Add("@elemento_guid", elemento_guid,
+                                    DbType.Guid, ParameterDirection.Input);
+
+            
+            string sentenciaSQL = "SELECT count(*) totalRegistros " +
+                "FROM core.v_info_compuestos " +
+                "WHERE elemento_uuid = @elemento_guid";
+
+            var totalRegistros = await conexion
+                .QueryAsync<int>(sentenciaSQL, parametrosSentencia);
+
+            return totalRegistros.FirstOrDefault();
+        }
+
         public async Task<Elemento> checkUniqueValuesAsync(Elemento unElemento)
         {
             var conexion = contextoDB.CreateConnection();
-            int count = 0;
             Elemento elemento = new();
 
             DynamicParameters parametrosSentencia = new();

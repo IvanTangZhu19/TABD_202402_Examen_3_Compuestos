@@ -13,5 +13,7 @@ namespace COMPUESTOS_API_CS_SQL.Interfaces
         public Task<Elemento> checkUniqueValuesAsync(Elemento unElemento);
 
         public Task<Elemento> GetByNameAsync(string nombre);
+
+        public Task<int> GetTotalAssociatedCompoundsByElementGuidAsync(Guid elemento_guid);
     }
 }
