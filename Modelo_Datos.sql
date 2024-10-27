@@ -66,6 +66,20 @@ alter table core.elementos add constraint elemento_nombre_uk unique (nombre);
 alter table core.elementos add constraint elemento_simbolo_uk unique (simbolo);
 alter table core.elementos add constraint elemento_numero_uk unique (numero_atomico);
 
+
+------------------
+-- Vistas
+------------------
+
+create or replace view core.v_info_compuestos as
+(    
+SELECT DISTINCT c.compuesto_uuid, c.nombre,
+	e.elemento_uuid, e.nombre elemento, ec.cantidad 
+	FROM core.compuestos c 
+		JOIN core.elementos_compuesto ec ON c.id = ec.compuestoID 
+		JOIN core.elementos e ON ec.elementoID = e.id
+);
+
 ---------------------
 -- Procedimientos
 ----------------------
@@ -158,5 +172,36 @@ $$
         update core.elemento
         set nombre = initcap(p_nombre), simbolo = initcap(p_simbolo), numero_atomico = p_numero_atomico, configuracion = p_configuracion 
         where elemento_uuid = p_uuid;
+    end;
+$$;
+
+create or replace procedure core.p_eliminar_elemento(
+                            in p_uuid           uuid)
+    language plpgsql as
+$$
+    declare
+        l_total_registros integer;
+
+    begin
+
+        select count(id) into l_total_registros
+        from core.elementos
+        where elemento_uuid = p_uuid;
+
+        if l_total_registros = 0  then
+            raise exception 'No existe un elemento registrado con ese Guid';
+        end if;
+
+        select count(compuesto_uuid) into l_total_registros
+        from core.v_info_compuestos
+        where elemento_uuid = p_uuid;
+
+        if l_total_registros != 0  then
+            raise exception 'No se puede eliminar, hay compuestos que dependen de este elemento.';
+        end if;
+
+        delete from core.elementos
+        where elemento_uuid = p_uuid;
+
     end;
 $$;
