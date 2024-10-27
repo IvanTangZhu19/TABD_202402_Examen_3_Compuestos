@@ -12,15 +12,14 @@ builder.Services.AddSingleton<PgsqlContext>();
 
 //Los repositorios
 builder.Services.AddScoped<IElementoRepository, ElementoRepository>();
-//builder.Services.AddScoped<IPaisRepository, PaisRepository>();
+builder.Services.AddScoped<ICompuestoRepository, CompuestoRepository>();
 //builder.Services.AddScoped<IRazaRepository, RazaRepository>();
 //builder.Services.AddScoped<ICaracteristicaRepository, CaracteristicaRepository>();
 
 ////Aqui agregamos los servicios asociados para cada ruta
 builder.Services.AddScoped<ElementoService>();
-//builder.Services.AddScoped<PaisService>();
-//builder.Services.AddScoped<RazaService>();
-//builder.Services.AddScoped<CaracteristicaService>();
+builder.Services.AddScoped<CompuestoService>();
+
 
 // Add services to the container.
 builder.Services.AddControllers()

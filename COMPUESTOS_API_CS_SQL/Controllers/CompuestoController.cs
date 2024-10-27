@@ -7,6 +7,16 @@ namespace COMPUESTOS_API_CS_SQL.Controllers
     [ApiController]
     public class CompuestoController(CompuestoService compuestoService): Controller
     {
+        private readonly CompuestoService _compuestoService = compuestoService;
+
+        [HttpGet]
+        public async Task<IActionResult> GetAllAsync()
+        {
+            var losCompuestos = await _compuestoService
+                .GetAllAsync();
+
+            return Ok(losCompuestos);
+        }
 
     }
 }
