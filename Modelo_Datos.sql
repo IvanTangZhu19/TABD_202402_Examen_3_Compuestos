@@ -205,3 +205,77 @@ $$
 
     end;
 $$;
+
+create or replace procedure core.p_insertar_compuesto(
+                            in p_nombre          text,
+                            in p_formula         text,
+			    in p_masa_molar	float,
+			    in p_estado		text)
+    language plpgsql as
+$$
+    declare
+        l_total_registros integer;
+
+    begin
+        if p_nombre is null or
+           p_formula is null or
+		   p_estado is null or
+           p_masa_molar <= 0 or
+           length(p_nombre) = 0 or
+		   length(p_formula) = 0 or
+		   length(p_estado) = 0  then
+               raise exception 'El nombre, la formula y el estado no pueden ser nulos';
+        end if;
+
+        -- Validación de cantidad de registros con ese nombre
+        select count(id) into l_total_registros
+        from core.compuestos
+        where lower(nombre) = lower(p_nombre);
+
+        if l_total_registros > 0  then
+            raise exception 'Ya existe un compuesto registrado con ese nombre';
+        end if;
+
+         -- Validación de cantidad de registros con esa formula
+        select count(id) into l_total_registros
+        from core.compuestos
+        where lower(formula) = lower(p_formula);
+
+        if l_total_registros > 0  then
+            raise exception 'Ya existe una formula registrada con ese nombre';
+        end if;
+
+        insert into core.compuestos(nombre, formula, masa_molar, estado_agregacion)
+        values (p_nombre, p_formula, p_masa_molar, p_estado);
+    end;
+$$;
+
+create or replace procedure core.p_insertar_elemento_compuesto(
+                            in p_compuestoID    text,
+                            in p_elementoID     text,
+			    			in p_cantidad		float)
+    language plpgsql as
+$$
+    declare
+        l_total_registros integer;
+
+    begin
+        if p_elementoID <= 0 or
+           p_compuestoID <= 0 or
+           p_cantidad <= 0 then
+               raise exception 'Los valores tienen que ser mayores a cero';
+        end if;
+
+        -- Validación de cantidad de registros con ese nombre
+        select count(id) into l_total_registros
+        from core.elementos_compuesto
+        where compuestoID = p_compuestoID and elementoID = p_elementoID;
+
+        if l_total_registros > 0  then
+            raise exception 'Ya existe un compuesto con ese elemento';
+        end if;
+
+        insert into core.elementos_compuesto(compuestoID, elementoID, cantidad)
+        values (p_compuestoID, p_elementoID, cantidad);
+    end;
+$$;

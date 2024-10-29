@@ -1,4 +1,5 @@
 ﻿using COMPUESTOS_API_CS_SQL.Exceptions;
+using COMPUESTOS_API_CS_SQL.Models;
 using COMPUESTOS_API_CS_SQL.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -33,26 +34,25 @@ namespace COMPUESTOS_API_CS_SQL.Controllers
             {
                 return NotFound(error.Message);
             }
+        }
+        [HttpPost]
+        public async Task<IActionResult> CreateAsync(CompuestoDetallado unCompuestoDetallado)
+        {
+            try
+            {
+                var compuestoCreado = await _compuestoService
+                    .CreateAsync(unCompuestoDetallado);
 
-            //[HttpPost]
-            //public async Task<IActionResult> CreateAsync(Raza unaRaza)
-            //{
-            //    try
-            //    {
-            //        var razaCreada = await _razaService
-            //            .CreateAsync(unaRaza);
-
-            //        return Ok(razaCreada);
-            //    }
-            //    catch (AppValidationException error)
-            //    {
-            //        return BadRequest($"Error en la validación: {error.Message}");
-            //    }
-            //    catch (DbOperationException error)
-            //    {
-            //        return BadRequest($"Error en la operación de la DB {error.Message}");
-            //    }
-            //}
+                return Ok(compuestoCreado);
+            }
+            catch (AppValidationException error)
+            {
+                return BadRequest($"Error en la validación: {error.Message}");
+            }
+            catch (DbOperationException error)
+            {
+                return BadRequest($"Error en la operación de la DB {error.Message}");
+            }
         }
 
     }

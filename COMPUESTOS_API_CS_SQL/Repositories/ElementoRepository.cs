@@ -221,7 +221,6 @@ namespace COMPUESTOS_API_CS_SQL.Repositories
                 "FROM core.elementos " +
                 "WHERE nombre = @nombre ";
 
-
             var resultado = await conexion.QueryAsync<Elemento>(sentenciaSQL,
                 parametrosSentencia);
 
