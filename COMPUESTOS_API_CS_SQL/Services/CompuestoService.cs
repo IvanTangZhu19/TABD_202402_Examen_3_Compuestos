@@ -1,6 +1,7 @@
 ﻿using COMPUESTOS_API_CS_SQL.Exceptions;
 using COMPUESTOS_API_CS_SQL.Interfaces;
 using COMPUESTOS_API_CS_SQL.Models;
+using System.Xml.Linq;
 
 namespace COMPUESTOS_API_CS_SQL.Services
 {
@@ -70,6 +71,73 @@ namespace COMPUESTOS_API_CS_SQL.Services
             return compuestoExistente;
         }
 
+        public async Task<Compuesto> UpdateAsync(CompuestoDetallado unCompuestoDetallado)
+        {
+            string resultadoValidacionDatos = ValidaDatos(unCompuestoDetallado);
+
+            if (!string.IsNullOrEmpty(resultadoValidacionDatos))
+                throw new AppValidationException(resultadoValidacionDatos);
+
+            var compuestoExistente = await _compuestoRepository
+                .GetByGuidAsync(unCompuestoDetallado.Uuid!);
+
+            if (compuestoExistente.Uuid == Guid.Empty && compuestoExistente.Uuid == unCompuestoDetallado.Uuid)
+                throw new AppValidationException($"No está registrado un compuesto con uuid: {unCompuestoDetallado.Uuid}");
+
+            foreach (var item in unCompuestoDetallado.Elementos!)
+            {
+                if((await _elementoRepository.GetByNameAsync(item.Nombre!)).Uuid == Guid.Empty)
+                    throw new AppValidationException($"El elemento {item.Nombre}" +
+                        $" no se encuentra registrado");
+            }
+            try
+            {
+                bool resultadoAccion = await _compuestoRepository
+                    .UpdateAsync(unCompuestoDetallado);
+
+                if (!resultadoAccion)
+                    throw new AppValidationException("Operación ejecutada pero no generó cambios en la DB");
+
+                compuestoExistente = await _compuestoRepository
+                    .GetByGuidAsync(unCompuestoDetallado.Uuid);
+            }
+            catch (DbOperationException)
+            {
+                throw;
+            }
+            return compuestoExistente;
+        }
+
+        //public async Task<Elemento> RemoveAsync(Guid elemento_guid)
+        //{
+        //    var elementoExistente = await _elementoRepository
+        //        .GetByGuidAsync(elemento_guid);
+
+        //    if (elementoExistente.Uuid == Guid.Empty)
+        //        throw new AppValidationException($"No existe un elemento identificado con el Guid {elemento_guid} registrado previamente");
+
+        //    int totalRazasAsociadas = await _elementoRepository
+        //        .GetTotalAssociatedCompoundsByElementGuidAsync(elemento_guid);
+
+        //    if (totalRazasAsociadas != 0)
+        //        throw new AppValidationException($"Pais {paisExistente.Nombre} tiene asociado {totalRazasAsociadas} razas. No se puede eliminar.");
+
+        //    try
+        //    {
+        //        bool resultadoAccion = await _elementoRepository
+        //            .DeleteAsync(elemento_guid);
+
+        //        if (!resultadoAccion)
+        //            throw new AppValidationException("Operación ejecutada pero no generó cambios en la DB");
+        //    }
+        //    catch (DbOperationException)
+        //    {
+        //        throw;
+        //    }
+
+        //    return elementoExistente;
+
+        //}
         private static string ValidaDatos(CompuestoDetallado unCompuestoDetallado)
         {
             if (string.IsNullOrEmpty(unCompuestoDetallado.Nombre))
@@ -80,8 +148,22 @@ namespace COMPUESTOS_API_CS_SQL.Services
 
             if (string.IsNullOrEmpty(unCompuestoDetallado.Estado_agregacion))
                 return ("El estado de agregación no puede estar vacío");
+
             if (unCompuestoDetallado.Masa_molar < 0)
                 return ("La masa molar no puede ser menor a cero");
+
+            if (unCompuestoDetallado.Elementos!.Count == 0 && unCompuestoDetallado.Elementos == null)
+                return ("La lista de elementos no puede estar vacío");
+            else
+            {
+                foreach (var item in unCompuestoDetallado.Elementos!)
+                {
+                    if (string.IsNullOrEmpty(item.Nombre))
+                        return ("El elemento no puede estar vacío");
+                    else if (item.Cantidad <= 0)
+                        return ("La cantidad de atomos del elemento no puede ser menor a cero");
+                }
+            }
 
             return string.Empty;
         }

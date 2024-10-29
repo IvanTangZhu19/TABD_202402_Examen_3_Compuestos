@@ -141,10 +141,10 @@ namespace COMPUESTOS_API_CS_SQL.Repositories
 
                 if (cantidadFilas != 0)
                 {
+                    compuestoID = await GetIDCompoundAsync(unCompuestoDetallado.Nombre!);
                     foreach (ElementoSimplificado elementoSimplificado in 
                         unCompuestoDetallado.Elementos!)
                     {
-                        compuestoID = await GetIDCompoundAsync(unCompuestoDetallado.Nombre!);
                         elementoID = await GetIDElementAsync(elementoSimplificado.Nombre!);
                         var parametrosElementos = new
                         {
@@ -211,13 +211,67 @@ namespace COMPUESTOS_API_CS_SQL.Repositories
             return resultado.First();
         }
 
-        public Task<bool> DeleteAsync(Guid elemento_guid)
+        public async Task<bool> UpdateAsync(CompuestoDetallado unCompuestoDetallado)
         {
-            throw new NotImplementedException();
+            {
+                bool resultadoAccion = false;
+
+                try
+                {
+                    var conexion = contextoDB.CreateConnection();
+                    int compuestoID, elementoID;
+
+                    string procedimiento = "core.p_actualizar_compuesto";
+                    string procedimientoElementosCompuesto = "core.p_actualizar_insertar_elemento_compuesto";
+
+                    var parametros = new
+                    {
+                        p_uuid = unCompuestoDetallado.Uuid,
+                        p_nombre = unCompuestoDetallado.Nombre,
+                        p_formula = unCompuestoDetallado.Formula,
+                        p_masa_molar = unCompuestoDetallado.Masa_molar,
+                        p_estado = unCompuestoDetallado.Estado_agregacion
+                    };
+
+                    var cantidad_filas = await conexion.ExecuteAsync(
+                        procedimiento,
+                        parametros,
+                        commandType: CommandType.StoredProcedure);
+
+                    if (cantidad_filas != 0)
+                    {
+                        compuestoID = await GetIDCompoundAsync(unCompuestoDetallado.Nombre!);
+                        foreach (ElementoSimplificado elementoSimplificado in
+                            unCompuestoDetallado.Elementos!)
+                        {
+                            elementoID = await GetIDElementAsync(elementoSimplificado.Nombre!);
+                            var parametrosElementos = new
+                            {
+                                p_compuestoid = compuestoID,
+                                p_elementoid = elementoID,
+                                p_cantidad = elementoSimplificado.Cantidad
+
+                            };
+                            cantidad_filas += await conexion
+                                .ExecuteAsync(
+                                    procedimientoElementosCompuesto,
+                                    parametrosElementos,
+                                    commandType: CommandType.StoredProcedure);
+                        }
+                        if (cantidad_filas != 0)
+                            resultadoAccion = true;
+                    }
+                }
+                catch (NpgsqlException error)
+                {
+                    throw new DbOperationException(error.Message);
+                }
+
+                return resultadoAccion;
+            }
         }
 
-
-        public Task<bool> UpdateAsync(Compuesto unElemento)
+        public Task<bool> DeleteAsync(Guid elemento_guid)
         {
             throw new NotImplementedException();
         }

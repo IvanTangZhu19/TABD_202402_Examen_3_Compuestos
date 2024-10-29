@@ -8,7 +8,7 @@ namespace COMPUESTOS_API_CS_SQL.Interfaces
         public Task<Compuesto> GetByGuidAsync(Guid compuesto_guid);
         public Task<Compuesto> GetByNameAsync(string compuesto_nombre);
         public Task<bool> CreateAsync(CompuestoDetallado unCompuesto);
-        public Task<bool> UpdateAsync(Compuesto unCompuesto);
+        public Task<bool> UpdateAsync(CompuestoDetallado unCompuesto);
         public Task<bool> DeleteAsync(Guid compuesto_guid);
 
         public Task<CompuestoDetallado> GetDetailedCompoundByGuidAsync(Guid compuesto_guid);

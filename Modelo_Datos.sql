@@ -169,7 +169,7 @@ $$
                raise exception 'El nombre del elemento o el simbolo o la configuración no pueden ser nulos';
         end if;
 
-        update core.elemento
+        update core.elementos
         set nombre = initcap(p_nombre), simbolo = initcap(p_simbolo), numero_atomico = p_numero_atomico, configuracion = p_configuracion 
         where elemento_uuid = p_uuid;
     end;
@@ -251,9 +251,9 @@ $$
 $$;
 
 create or replace procedure core.p_insertar_elemento_compuesto(
-                            in p_compuestoID    text,
-                            in p_elementoID     text,
-			    			in p_cantidad		float)
+                            in p_compuestoID    integer,
+                            in p_elementoID     integer,
+			    			in p_cantidad		integer)
     language plpgsql as
 $$
     declare
@@ -277,5 +277,41 @@ $$
 
         insert into core.elementos_compuesto(compuestoID, elementoID, cantidad)
         values (p_compuestoID, p_elementoID, cantidad);
+    end;
+$$;
+
+create or replace procedure core.p_actualizar_compuesto(
+                            in p_uuid       uuid,
+                            in p_nombre     text,
+                            in p_formula    text,
+			                in p_masa_molar	float,
+			                in p_estado		text)
+    language plpgsql as
+$$
+    declare
+        l_total_registros integer;
+
+    begin
+        select count(id) into l_total_registros
+        from core.compuestos
+        where compuesto_uuid = p_uuid;
+
+        if l_total_registros = 0  then
+            raise exception 'No existe un compuesto registrado con ese Guid';
+        end if;
+
+        if p_nombre is null or
+           p_formula is null or
+		   p_estado is null or
+           p_masa_molar <= 0 or
+           length(p_nombre) = 0 or
+		   length(p_formula) = 0 or
+		   length(p_estado) = 0  then
+               raise exception 'El nombre, la formula y el estado no pueden ser nulos';
+        end if;
+
+        update core.compuestos
+        set nombre = p_nombre, formula = p_formula, masa_molar = p_masa_molar, estado_agregacion = p_estado 
+        where compuesto_uuid = p_uuid;
     end;
 $$;
