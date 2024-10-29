@@ -12,6 +12,7 @@ namespace COMPUESTOS_API_CS_SQL.Repositories
     {
         private readonly PgsqlContext contextoDB = unContexto;
 
+        //Trae todos los elementos de la base de datos
         public async Task<List<Elemento>> GetAllAsync()
         {
             var conexion = contextoDB.CreateConnection();
@@ -26,6 +27,7 @@ namespace COMPUESTOS_API_CS_SQL.Repositories
             return resultadoElementos.ToList();
         }
 
+        //Trae un elemento de la base de datos por Guid
         public async Task<Elemento> GetByGuidAsync(Guid elemento_guid)
         {
             Elemento unElemento = new();
@@ -50,6 +52,7 @@ namespace COMPUESTOS_API_CS_SQL.Repositories
 
             return unElemento;
         }
+        //Crea un nuevo elemento
         public async Task<bool> CreateAsync(Elemento unElemento)
         {
             bool resultadoAccion = false;
@@ -86,10 +89,12 @@ namespace COMPUESTOS_API_CS_SQL.Repositories
         }
 
 
+        //Actualiza un elemento
         public async Task<bool> UpdateAsync(Elemento unElemento)
         {
             bool resultadoAccion = false;
 
+            //Se verifica se existe el elemento
             var elementoExistente = await GetByGuidAsync(unElemento.Uuid);
 
             if (elementoExistente.Uuid == Guid.Empty)
@@ -125,6 +130,7 @@ namespace COMPUESTOS_API_CS_SQL.Repositories
             return resultadoAccion;
         }
 
+        //Se elimina un elemento
         public async Task<bool> DeleteAsync(Guid elemento_guid)
         {
             bool resultadoAccion = false;
@@ -155,6 +161,7 @@ namespace COMPUESTOS_API_CS_SQL.Repositories
             return resultadoAccion;
         }
 
+        //Devuelve un int del numero de compuestos que contienen un elemento por guid
         public async Task<int> GetTotalAssociatedCompoundsByElementGuidAsync(Guid elemento_guid)
         {
             var conexion = contextoDB.CreateConnection();
@@ -174,6 +181,8 @@ namespace COMPUESTOS_API_CS_SQL.Repositories
             return totalRegistros.FirstOrDefault();
         }
 
+        //Se verifica que los valores únicos nombre, simbolo y numero_atomico no tengan
+        //registros en la base de datos
         public async Task<Elemento> checkUniqueValuesAsync(Elemento unElemento)
         {
             var conexion = contextoDB.CreateConnection();
@@ -206,6 +215,7 @@ namespace COMPUESTOS_API_CS_SQL.Repositories
 
         }
 
+        //Trae un elemento dado un nombre
         public async Task<Elemento> GetByNameAsync(string nombre)
         {
             Elemento unElemento = new();

@@ -11,6 +11,7 @@ namespace COMPUESTOS_API_CS_SQL.Repositories
     public class CompuestoRepository(PgsqlContext unContexto) : ICompuestoRepository
     {
         private readonly PgsqlContext contextoDB = unContexto;
+        //Trae todos los compuestos (sin elementos)
         public async Task<List<Compuesto>> GetAllAsync()
         {
             var conexion = contextoDB.CreateConnection();
@@ -25,6 +26,7 @@ namespace COMPUESTOS_API_CS_SQL.Repositories
             return resultadoCompuestos.ToList();
         }
 
+        //Trae un compuesto por guid
         public async Task<Compuesto> GetByGuidAsync(Guid compuesto_guid)
         {
             Compuesto unCompuesto = new();
@@ -47,6 +49,7 @@ namespace COMPUESTOS_API_CS_SQL.Repositories
             return unCompuesto;
         }
 
+        //Trae los elementos de un compuesto dado el guid (incluyendo el compuesto)
         public async Task<CompuestoDetallado> GetDetailedCompoundByGuidAsync(Guid compuesto_guid)
         {
             Compuesto unCompuesto = await GetByGuidAsync(compuesto_guid);
@@ -64,6 +67,7 @@ namespace COMPUESTOS_API_CS_SQL.Repositories
             return unCompuestoDetallado;
         }
 
+        //Trae los elementos de un compuesto (en el metodo anterior lo llama)
         public async Task<List<ElementoSimplificado>> GetElementsDetailsAsync(Guid compuesto_guid)
         {
             List<ElementoSimplificado> infoElementos = [];
@@ -89,6 +93,7 @@ namespace COMPUESTOS_API_CS_SQL.Repositories
             return infoElementos;
         }
 
+        //Trae un compuesto por nombre
         public async Task<Compuesto> GetByNameAsync(string nombre)
         {
             Compuesto unCompuesto = new();
@@ -113,6 +118,7 @@ namespace COMPUESTOS_API_CS_SQL.Repositories
 
             return unCompuesto;
         }
+        //Crea un compuesto, incluyendo los elementos
         public async Task<bool> CreateAsync(CompuestoDetallado unCompuestoDetallado)
         {
             bool resultadoAccion = false;
@@ -122,7 +128,9 @@ namespace COMPUESTOS_API_CS_SQL.Repositories
             try
             {
                 int compuestoID, elementoID;
+                //Nombre procedimiento para añadir un compuesto
                 string procedimientoCompuesto = "core.p_insertar_compuesto";
+                //Nombre procedimiento para añadir un elemento al compuesto
                 string procedimientoElementosCompuesto = "core.p_insertar_elemento_compuesto";
 
                 var parametros = new
@@ -141,10 +149,13 @@ namespace COMPUESTOS_API_CS_SQL.Repositories
 
                 if (cantidadFilas != 0)
                 {
+                    //Metodo que trae el id del compuesto dado el nombre
                     compuestoID = await GetIDCompoundAsync(unCompuestoDetallado.Nombre!);
+                    //Se recorre la lista de elementos, para añadir los elementos del compuesto
                     foreach (ElementoSimplificado elementoSimplificado in 
                         unCompuestoDetallado.Elementos!)
                     {
+                        //Trae el id del elemento dado el nombre
                         elementoID = await GetIDElementAsync(elementoSimplificado.Nombre!);
                         var parametrosElementos = new
                         {
@@ -171,6 +182,7 @@ namespace COMPUESTOS_API_CS_SQL.Repositories
             return resultadoAccion;
         }
 
+        //Trae el id del compuesto dado el nombre
         public async Task<int> GetIDCompoundAsync(string nombre)
         {
             var conexion = contextoDB.CreateConnection();
@@ -189,7 +201,7 @@ namespace COMPUESTOS_API_CS_SQL.Repositories
 
             return resultado.FirstOrDefault();
         }
-
+        //Trea el id del elemento dado el nombre
         public async Task<int> GetIDElementAsync(string nombre)
         {
 
@@ -209,7 +221,7 @@ namespace COMPUESTOS_API_CS_SQL.Repositories
 
             return resultado.First();
         }
-
+        //Actualiza el compuesto, incluyendo los elementos
         public async Task<bool> UpdateAsync(CompuestoDetallado unCompuestoDetallado)
         {
             {
@@ -239,6 +251,7 @@ namespace COMPUESTOS_API_CS_SQL.Repositories
 
                     if (cantidad_filas != 0)
                     {
+                        //Similar al de crear compuesto
                         compuestoID = await GetIDCompoundAsync(unCompuestoDetallado.Nombre!);
                         foreach (ElementoSimplificado elementoSimplificado in
                             unCompuestoDetallado.Elementos!)
@@ -269,7 +282,7 @@ namespace COMPUESTOS_API_CS_SQL.Repositories
                 return resultadoAccion;
             }
         }
-
+        //Elimina un compuesto dado el guid, incluyendo los elementos asociados
         public async Task<bool> DeleteAsync(Guid compuesto_guid)
         {
             bool resultadoAccion = false;
@@ -286,9 +299,12 @@ namespace COMPUESTOS_API_CS_SQL.Repositories
 
                 if(ElementosCompuesto.Count > 0)
                 {
+                    //Se trae el compuesto por guid, se indica el nombre, el cual es el 
+                    //parámetro para traer el id del compuesto
                     compuestoID = await GetIDCompoundAsync((
                         await GetByGuidAsync(compuesto_guid)).Nombre!);
-                    //Primero se eliminan las filas de la tabla elementos_compuesto
+                    //Primero se eliminan las filas de la tabla elementos_compuesto (por dependencia)
+                    //Recorre la lista de elementos registrados del compuesto
                     foreach (ElementoSimplificado elementoSimplificado in ElementosCompuesto)
                     {
                         elementoID = await GetIDElementAsync(elementoSimplificado.Nombre!);
@@ -304,12 +320,12 @@ namespace COMPUESTOS_API_CS_SQL.Repositories
                                 commandType: CommandType.StoredProcedure);
                     }
                 }
-
+                
                 var parametros = new
                 {
                     p_uuid = compuesto_guid
                 };
-
+                //Después de eliminar los elementos, se elimina el compuesto
                 cantidad_filas = await conexion.ExecuteAsync(
                     procedimiento,
                     parametros,
