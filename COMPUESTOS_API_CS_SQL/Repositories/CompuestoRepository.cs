@@ -190,7 +190,6 @@ namespace COMPUESTOS_API_CS_SQL.Repositories
             return resultado.FirstOrDefault();
         }
 
-        //Devuelve el id del elementos por nombre
         public async Task<int> GetIDElementAsync(string nombre)
         {
 
@@ -271,9 +270,62 @@ namespace COMPUESTOS_API_CS_SQL.Repositories
             }
         }
 
-        public Task<bool> DeleteAsync(Guid elemento_guid)
+        public async Task<bool> DeleteAsync(Guid compuesto_guid)
         {
-            throw new NotImplementedException();
+            bool resultadoAccion = false;
+
+            try
+            {
+                var conexion = contextoDB.CreateConnection();
+
+                int elementoID, compuestoID, cantidad_filas= 0;
+                string procedimiento = "core.p_eliminar_compuesto";
+                string procedimientoElementos = "core.p_eliminar_elementos_compuesto";
+
+                var ElementosCompuesto = await GetElementsDetailsAsync(compuesto_guid);
+
+                if(ElementosCompuesto.Count > 0)
+                {
+                    compuestoID = await GetIDCompoundAsync((
+                        await GetByGuidAsync(compuesto_guid)).Nombre!);
+                    //Primero se eliminan las filas de la tabla elementos_compuesto
+                    foreach (ElementoSimplificado elementoSimplificado in ElementosCompuesto)
+                    {
+                        elementoID = await GetIDElementAsync(elementoSimplificado.Nombre!);
+                        var parametrosElementos = new
+                        {
+                            p_compuestoid = compuestoID,
+                            p_elementoid = elementoID,
+                        };
+                        cantidad_filas += await conexion
+                            .ExecuteAsync(
+                                procedimientoElementos,
+                                parametrosElementos,
+                                commandType: CommandType.StoredProcedure);
+                    }
+                }
+
+                var parametros = new
+                {
+                    p_uuid = compuesto_guid
+                };
+
+                cantidad_filas = await conexion.ExecuteAsync(
+                    procedimiento,
+                    parametros,
+                    commandType: CommandType.StoredProcedure);
+
+                if (cantidad_filas != 0)
+                    resultadoAccion = true;
+            }
+            catch (NpgsqlException error)
+            {
+                throw new DbOperationException(error.Message);
+            }
+
+            return resultadoAccion;
         }
+
+
     }
 }

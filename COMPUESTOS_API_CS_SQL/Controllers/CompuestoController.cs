@@ -75,25 +75,25 @@ namespace COMPUESTOS_API_CS_SQL.Controllers
             }
         }
 
-        //[HttpDelete]
-        //public async Task<IActionResult> RemoveAsync(Guid compuesto_guid)
-        //{
-        //    try
-        //    {
-        //        var compuestoEliminado = await _compuestoService
-        //            .RemoveAsync(compuesto_guid);
+        [HttpDelete]
+        public async Task<IActionResult> RemoveAsync(Guid compuesto_guid)
+        {
+            try
+            {
+                var compuestoEliminado = await _compuestoService
+                    .RemoveAsync(compuesto_guid);
 
-        //        return Ok(compuestoEliminado);
-        //    }
-        //    catch (AppValidationException error)
-        //    {
-        //        return BadRequest($"Error de validación: {error.Message}");
-        //    }
-        //    catch (DbOperationException error)
-        //    {
-        //        return BadRequest($"Error de operacion en DB: {error.Message}");
-        //    }
-        //}
+                return Ok(compuestoEliminado);
+            }
+            catch (AppValidationException error)
+            {
+                return BadRequest($"Error de validación: {error.Message}");
+            }
+            catch (DbOperationException error)
+            {
+                return BadRequest($"Error de operacion en DB: {error.Message}");
+            }
+        }
 
     }
 }

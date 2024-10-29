@@ -276,7 +276,7 @@ $$
         end if;
 
         insert into core.elementos_compuesto(compuestoID, elementoID, cantidad)
-        values (p_compuestoID, p_elementoID, cantidad);
+        values (p_compuestoID, p_elementoID, p_cantidad);
     end;
 $$;
 
@@ -313,5 +313,110 @@ $$
         update core.compuestos
         set nombre = p_nombre, formula = p_formula, masa_molar = p_masa_molar, estado_agregacion = p_estado 
         where compuesto_uuid = p_uuid;
+    end;
+$$;
+
+create or replace procedure core.p_actualizar_insertar_elemento_compuesto(
+                            in p_compuestoID    integer,
+                            in p_elementoID     integer,
+			    			in p_cantidad		integer)
+    language plpgsql as
+$$
+    declare
+        l_total_registros integer;
+
+    begin
+        select count(id) into l_total_registros
+        from core.compuestos
+        where id = p_compuestoID;
+
+        if l_total_registros = 0  then
+            raise exception 'No existe un compuesto registrado con ese ID';
+        end if;
+
+		select count(id) into l_total_registros
+        from core.elementos
+        where id = p_elementoID;
+
+        if l_total_registros = 0  then
+            raise exception 'No existe un elemento registrado con ese ID';
+        end if;
+
+        if p_elementoID <= 0 or
+           p_compuestoID <= 0 or
+           p_cantidad <= 0 then
+               raise exception 'Los valores tienen que ser mayores a cero';
+        end if;
+
+		select count(*) into l_total_registros
+        from core.elementos_compuesto
+        where elementoID = p_elementoID and compuestoID = p_compuestoID;
+
+		if l_total_registros > 0  then
+            update core.elementos_compuesto
+        	set cantidad = p_cantidad
+        	where elementoID = p_elementoID and compuestoID = p_compuestoID;
+		else
+			insert into core.elementos_compuesto(compuestoID, elementoID, cantidad)
+        	values (p_compuestoID, p_elementoID, p_cantidad);
+        end if;
+
+    end;
+$$;
+
+create or replace procedure core.p_eliminar_compuesto(
+                            in p_uuid           uuid)
+    language plpgsql as
+$$
+    declare
+        l_total_registros integer;
+
+    begin
+
+        select count(id) into l_total_registros
+        from core.compuestos
+        where compuesto_uuid = p_uuid;
+
+        if l_total_registros = 0  then
+            raise exception 'No existe un compuesto registrado con ese Guid';
+        end if;
+
+
+        delete from core.compuestos
+        where compuesto_uuid = p_uuid;
+
+    end;
+$$;
+
+create or replace procedure core.p_eliminar_elementos_compuesto(
+                            in p_compuestoID           integer,
+                            in p_elementoID            integer)
+    language plpgsql as
+$$
+    declare
+        l_total_registros integer;
+
+    begin
+
+        select count(id) into l_total_registros
+        from core.compuestos
+        where id = p_compuestoID;
+
+        if l_total_registros = 0  then
+            raise exception 'No existe un compuesto registrado con ese id';
+        end if;
+
+		select count(id) into l_total_registros
+        from core.elementos
+        where id = p_elementoID;
+
+        if l_total_registros = 0  then
+            raise exception 'No existe un elemento registrado con ese id';
+        end if;
+
+
+        delete from core.elementos_compuesto
+        where compuestoID = p_compuestoID and elementoID = p_elementoID;
+
     end;
 $$;

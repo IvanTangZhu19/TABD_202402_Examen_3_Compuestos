@@ -108,36 +108,27 @@ namespace COMPUESTOS_API_CS_SQL.Services
             return compuestoExistente;
         }
 
-        //public async Task<Elemento> RemoveAsync(Guid elemento_guid)
-        //{
-        //    var elementoExistente = await _elementoRepository
-        //        .GetByGuidAsync(elemento_guid);
+        public async Task<Compuesto> RemoveAsync(Guid compuesto_guid)
+        {
+            var compuestoExistente = await _compuestoRepository
+                .GetByGuidAsync(compuesto_guid);
 
-        //    if (elementoExistente.Uuid == Guid.Empty)
-        //        throw new AppValidationException($"No existe un elemento identificado con el Guid {elemento_guid} registrado previamente");
+            if (compuestoExistente.Uuid == Guid.Empty)
+                throw new AppValidationException($"No existe un compuesto identificado con el Guid {compuesto_guid} registrado previamente");
+            try
+            {
+                bool resultadoAccion = await _compuestoRepository
+                    .DeleteAsync(compuesto_guid);
 
-        //    int totalRazasAsociadas = await _elementoRepository
-        //        .GetTotalAssociatedCompoundsByElementGuidAsync(elemento_guid);
-
-        //    if (totalRazasAsociadas != 0)
-        //        throw new AppValidationException($"Pais {paisExistente.Nombre} tiene asociado {totalRazasAsociadas} razas. No se puede eliminar.");
-
-        //    try
-        //    {
-        //        bool resultadoAccion = await _elementoRepository
-        //            .DeleteAsync(elemento_guid);
-
-        //        if (!resultadoAccion)
-        //            throw new AppValidationException("Operación ejecutada pero no generó cambios en la DB");
-        //    }
-        //    catch (DbOperationException)
-        //    {
-        //        throw;
-        //    }
-
-        //    return elementoExistente;
-
-        //}
+                if (!resultadoAccion)
+                    throw new AppValidationException("Operación ejecutada pero no generó cambios en la DB");
+            }
+            catch (DbOperationException)
+            {
+                throw;
+            }
+            return compuestoExistente;
+        }
         private static string ValidaDatos(CompuestoDetallado unCompuestoDetallado)
         {
             if (string.IsNullOrEmpty(unCompuestoDetallado.Nombre))
